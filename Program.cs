@@ -97,8 +97,9 @@ namespace simpletest
                 //TODO remove this console write
                 Console.WriteLine(String.Format("Day {0} type: {1}", i, dayClassification));
                 
-                //TODO function to calculate cost based on full/travel/none and low/high
-                
+                // get cose for the day and add to our total 
+                totalCost += getCostForDay(dayClassification, activeProjects, set);
+
                 //decrement days in our active project dictionary, remove if zero days 
                 foreach (var key in activeProjects.Keys.ToList())
                 {
@@ -106,7 +107,7 @@ namespace simpletest
                     if (activeProjects[key] == 0) activeProjects.Remove(key);
                 }
             }
-            
+
             return totalCost;
         }
 
@@ -114,12 +115,12 @@ namespace simpletest
             return true if theres a project the next day that is not currently in our active project dictionary, 
             aka "pushed up" against another project
          */
-         private static bool AnotherProjectAfter(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set, int totalDays)
+        private static bool AnotherProjectAfter(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set, int totalDays)
         {
             //if we're on the last day, there cant be a project after 
-            if (i == (totalDays - 1)) 
+            if (i == (totalDays - 1))
                 return false;
-            
+
             for (int k = 0; k < set.Count(); k++)
             {
                 // if its not in our active projects dictionary, its a new project starting
@@ -135,7 +136,7 @@ namespace simpletest
         private static bool AnotherProjectBefore(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set)
         {
             // if we're on the first day, there cannot be a project before 
-            if (i == 0) 
+            if (i == 0)
 
                 return false;
             for (int k = 0; k < set.Count(); k++)
@@ -157,7 +158,7 @@ namespace simpletest
          */
         public static bool[,] GetDaysMatrix(List<Project> set, int min, int totalDays)
         {
-            
+
             bool[,] matrix = new bool[set.Count(), totalDays];
             for (int i = 0; i < set.Count(); i++)
             {
@@ -170,7 +171,36 @@ namespace simpletest
             return matrix;
         }
 
+        /*
+            returns the cost for each day based on the city cost and travel/full/none classification
+         */
+        private static int getCostForDay(string dayClassification, Dictionary<int, int> activeProjects, List<Project> set)
+        {
+            string cityCost;
+            if (dayClassification == "none")
+                return 0;
+
+            //if we have more than one project on the same day, the high cost project takes precedant     
+            if (activeProjects.Count() > 1)
+            {
+                cityCost = activeProjects.ContainsKey(set.FindIndex(x => x.cost == "high")) ? "high" : "low";
+            }
+            //else just take the only active project we have 
+            else
+            {
+                cityCost = set[activeProjects.First().Key].cost;
+            }
+            if (cityCost == "high")
+            {
+                return dayClassification == "full" ? 85 : 55;
+            }
+            // else low cost city
+            else
+                return dayClassification == "full" ? 75 : 45;
+        }
     }
+
+
 
 
 
