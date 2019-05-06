@@ -42,9 +42,111 @@ namespace simpletest
 
             //get our matrix of bools 
             bool[,] matrix = GetDaysMatrix(set, min, totalDays);
-            
+
+            //dictionary to keep track of project index and days left 
+            Dictionary<int, int> activeProjects = new Dictionary<int, int>();
+
+            //for loop that iterates over days
+            for (int i = 0; i < totalDays; i++)
+            {
+                bool newProjectStarted = false;
+                //update our active project dictionary
+                for (int j = 0; j < totalProjectCount; j++)
+                {
+                    if (matrix[j, i])
+                    {
+                        //if not in our active project dictionary, add it and set the new project flag to true 
+                        if (!activeProjects.ContainsKey(j))
+                        {
+                            int projectLength = (int)(set[j].end - set[j].start).TotalDays + 1;
+                            activeProjects.Add(j, projectLength);
+                            newProjectStarted = true;
+                        }
+                    }
+                }
+
+                string dayClassification;
+
+                //if there are no active projects, there is no cost for the day 
+                if (activeProjects.Count() == 0)
+                    dayClassification = "none";
+                else
+                {
+                    if (activeProjects.Count() == 1)
+                    {
+                        //if the project is "pushed-up" against another project, its a full day 
+                        if (AnotherProjectBefore(i, matrix, activeProjects, set) || AnotherProjectAfter(i, matrix, activeProjects, set, totalDays))
+                        {
+                            dayClassification = "full";
+                        }
+                        //if this is the beginning or end of a project, its a travel day 
+                        else if (newProjectStarted || activeProjects.First().Value == 1)
+                        {
+                            dayClassification = "travel";
+                        }
+                        //if theres one active project and it doesnt meet the other criteria, it is ongoing and a full day 
+                        else
+                            dayClassification = "full";
+                    }
+
+                    //if there is greater than one active project, the "overlap" rule determines it will be a full day
+                    else
+                        dayClassification = "full";
+
+                }
+                //TODO remove this console write
+                Console.WriteLine(String.Format("Day {0} type: {1}", i, dayClassification));
+                
+                //TODO function to calculate cost based on full/travel/none and low/high
+                
+                //decrement days in our active project dictionary, remove if zero days 
+                foreach (var key in activeProjects.Keys.ToList())
+                {
+                    activeProjects[key] = activeProjects[key] - 1;
+                    if (activeProjects[key] == 0) activeProjects.Remove(key);
+                }
+            }
             
             return totalCost;
+        }
+
+        /*
+            return true if theres a project the next day that is not currently in our active project dictionary, 
+            aka "pushed up" against another project
+         */
+         private static bool AnotherProjectAfter(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set, int totalDays)
+        {
+            //if we're on the last day, there cant be a project after 
+            if (i == (totalDays - 1)) 
+                return false;
+            
+            for (int k = 0; k < set.Count(); k++)
+            {
+                // if its not in our active projects dictionary, its a new project starting
+                if (matrix[k, (i + 1)] && !activeProjects.ContainsKey(k))
+                    return true;
+            }
+            return false;
+        }
+        /*
+            returns true if theres another project ending the previous day 
+            aka "pushed up" against another project
+         */
+        private static bool AnotherProjectBefore(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set)
+        {
+            // if we're on the first day, there cannot be a project before 
+            if (i == 0) 
+
+                return false;
+            for (int k = 0; k < set.Count(); k++)
+            {
+                //if theres a project the day before thats not in our active project dictionary, it has ended
+                //TODO revisit logic based on email response 
+                if (matrix[k, (i - 1)] && !activeProjects.ContainsKey(k))
+                    return true;
+            }
+            return false;
+
         }
 
         /*
