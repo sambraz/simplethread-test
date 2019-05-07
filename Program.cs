@@ -70,6 +70,9 @@ namespace simpletest
                 //if there are no active projects, there is no cost for the day 
                 if (activeProjects.Count() == 0)
                     dayClassification = "none";
+                //the first and last day of the entire project sequ ence is always a travel day 
+                else if (i == 0 || i == (totalDays - 1))
+                    dayClassification = "travel";
                 else
                 {
                     if (activeProjects.Count() == 1)
@@ -94,10 +97,7 @@ namespace simpletest
                         dayClassification = "full";
 
                 }
-                //TODO remove this console write
-                Console.WriteLine(String.Format("Day {0} type: {1}", i, dayClassification));
-                
-                // get cose for the day and add to our total 
+                // get cost for the day and add to our total 
                 totalCost += getCostForDay(dayClassification, activeProjects, set);
 
                 //decrement days in our active project dictionary, remove if zero days 
@@ -117,10 +117,6 @@ namespace simpletest
          */
         private static bool AnotherProjectAfter(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set, int totalDays)
         {
-            //if we're on the last day, there cant be a project after 
-            if (i == (totalDays - 1))
-                return false;
-
             for (int k = 0; k < set.Count(); k++)
             {
                 // if its not in our active projects dictionary, its a new project starting
@@ -135,14 +131,10 @@ namespace simpletest
          */
         private static bool AnotherProjectBefore(int i, bool[,] matrix, Dictionary<int, int> activeProjects, List<Project> set)
         {
-            // if we're on the first day, there cannot be a project before 
-            if (i == 0)
 
-                return false;
             for (int k = 0; k < set.Count(); k++)
             {
                 //if theres a project the day before thats not in our active project dictionary, it has ended
-                //TODO revisit logic based on email response 
                 if (matrix[k, (i - 1)] && !activeProjects.ContainsKey(k))
                     return true;
             }
