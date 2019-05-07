@@ -293,8 +293,6 @@ namespace simpletest
         }
         };
 
-        public static List<List<Project>> dataSet = new List<List<Project>> { set4 };
-
     }
 
 
